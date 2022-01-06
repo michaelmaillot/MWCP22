@@ -22,7 +22,6 @@ jobs:
         with:
           node-version: '14'
           cache: 'npm'
-          cache-dependency-path: $GITHUB_WORKSPACE/package-lock.json
 
       - name: npm ci
         run: npm ci

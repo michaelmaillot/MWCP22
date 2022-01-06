@@ -6,17 +6,18 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-spfx:
+  build_spfx:
     uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
-  deploy-spfx-uat:
-    needs: build-spfx
+  deploy_spfx_uat:
+    needs: build_spfx
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       environment_name: UAT
-  deploy-spfx-prd:
-    needs: deploy-spfx-uat
+  deploy_spfx_prd:
+    needs: deploy_spfx_uat
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       environment_name: PRD
+      site_to_remove: ${{ needs.jobs.deploy_spfx_uat.outputs.site_to_remove }}
