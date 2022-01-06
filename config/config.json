@@ -1,0 +1,18 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "hello-paris-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/helloParis/HelloParisWebPart.js",
+          "manifest": "./src/webparts/helloParis/HelloParisWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "HelloParisWebPartStrings": "lib/webparts/helloParis/loc/{locale}.js"
+  }
+}

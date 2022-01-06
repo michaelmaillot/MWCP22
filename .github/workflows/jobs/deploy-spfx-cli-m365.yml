@@ -1,0 +1,113 @@
+name: deploy with cli m365
+
+on:
+  workflow_call:
+    inputs:
+      environment_name:
+        description: 'Target environment to deploy to'
+        required: true
+        type: string
+      site_url_prd:
+        description: 'SharePoint PRD site URL'
+        required: true
+        type: string
+      site_list_prd:
+        description: 'SharePoint PRD list relative URL ("Lists/MyList")'
+        default: ""
+        required: false
+        type: string
+      site_name_prd:
+        description: 'SharePoint PRD list relative URL ("Lists/MyList")'
+        default: ""
+        required: false
+        type: string
+      site_copy_owner:
+        description: 'SharePoint copy site owner to be'
+        required: true
+        type: string
+        
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment_name }}
+    steps:
+      - name: GetSharePointPackage
+        shell: pwsh
+        run: |
+            $package = Get-ChildItem -Path $GITHUB_WORKSPACE/sharepoint/solution -Recurse -Filter '*.sppkg' | Select Name | Select-Object -First 1
+            echo "SPPKG_FILE=$($package.Name)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v2
+        with:
+          name: "${{ env.SPPKG_FILE }}"
+
+      - name: Use Node 14.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Install CLI for Microsoft 365
+        run: npm install -g @pnp/cli-microsoft365
+
+      - name: Login to Microsoft 365 with the CLI and set tenant context
+        shell: pwsh
+        run: |
+            m365 login --authType certificate --certificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} --thumbprint ${{ secrets.AAD_APP_THUMBPRINT }} --password ${{ secrets.AAD_APP_PASSWORD }} --appId ${{ secrets.AAD_APP_ID }} --tenant ${{ secrets.AAD_TENANT_ID }}
+            $uri = [System.Uri]"${{ inputs.site_url_prd }}"
+            m365 spo set --url $($uri.Scheme + "://" + $uri.Authority)
+
+      - name: Configuring CLI for Microsoft 365 output error handling
+        shell: pwsh
+        run: |
+            m365 cli config set --key output --value json
+            m365 cli config set --key errorOutput --value stdout
+      
+      - name: Installing PnP.PowerShell Module
+        if: ${{ inputs.environment_name != 'PRD' }}
+        shell: pwsh
+        run: Install-Module -Name "PnP.PowerShell" -Force
+
+      - name: Connecting to Production site and get site template
+        if: ${{ inputs.environment_name != 'PRD' }}
+        shell: pwsh
+        run: |
+            $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
+            Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword ${{ secrets.AAD_APP_PASSWORD }} -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+            Get-PnPSiteTemplate -Out $GITHUB_WORKSPACE/template.pnp
+            Add-PnPDataRowsToSiteTemplate -Path $GITHUB_WORKSPACE/template.pnp -List "$(site_list_prd)"
+
+      # - name: CreateSiteCopy
+      #   if: ${{ inputs.environment_name != 'PRD' }}
+      #   shell: pwsh
+      #   run: |
+      #       function Get-CLIValue {
+      #         [cmdletbinding()]
+      #         param(
+      #           [parameter(Mandatory = $true, ValueFromPipeline = $true)]
+      #           $input
+      #         )
+      #           $output = $input | ConvertFrom-Json
+      #           if ($output.error -ne $null) {
+      #             throw $output.error
+      #           }
+      #           return $output
+      #       }
+
+      #       $prdSiteName = $(Get-PnPWeb).Title
+      #       $siteName = "$prdSiteName-${{ inputs.environment_name }}" + [guid]::NewGuid().Guid
+      #       $siteUrl = "/sites/" + $siteName
+
+      #       try {
+      #         $site = m365 spo site add --type CommunicationSite --url $siteUrl --title $siteName --owners "${{ inputs.site_copy_owner }}" | Get-CLIValue
+      #         Write-Host "##vso[task.setvariable variable=siteCopy;isOutput=true]$site"
+      #         echo "SPPKG_FILE=$($package.Name)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+      #         Write-Host $site
+      #       }
+      #       catch {
+      #         Write-Host $_.Exception.Message -ForegroundColor Yellow
+      #       }
+      
+
+      
+

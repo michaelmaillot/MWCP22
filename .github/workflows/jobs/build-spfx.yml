@@ -1,0 +1,43 @@
+name: build
+
+on: workflow_call
+
+inputs:
+  include_tests:
+    description: 'Indicates whether build job has to run tests or not'
+    required: false
+    default: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Use Node 14.x
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+          cache: 'npm'
+          cache-dependency-path: $GITHUB_WORKSPACE/package-lock.json
+
+      - name: npm ci
+        run: npm ci
+
+      - name: Bundle project
+        uses: gulp bundle --ship
+
+      - name: npm test
+        if: ${{ inputs.include_tests == true }}
+        run: npm test
+
+      - name: Package solution
+        uses: gulp package-solution --ship
+
+      # - name: CLI for Microsoft 365 Deploy App
+      #   uses: pnp/action-cli-deploy@v2.0.1
+      #   with:
+      #     APP_FILE_PATH: $GITHUB_WORKSPACE/sharepoint
+      

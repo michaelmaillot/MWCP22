@@ -1,0 +1,14 @@
+name: main
+on:
+  push:
+    branches: 
+      - master
+
+jobs:
+  build-deploy-spfx:
+    uses: michaelmaillot/mwcp22/.github/workflows/jobs/build-deploy-spfx-cli-m365.yml@v1
+    with:
+      include_tests: false
+      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
+      deploy_uat: true
+      deploy_prd: true
