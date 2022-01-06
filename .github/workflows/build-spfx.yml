@@ -1,12 +1,13 @@
 name: build
 
-on: workflow_call
-
-inputs:
-  include_tests:
-    description: 'Indicates whether build job has to run tests or not'
-    required: false
-    default: false
+on:
+  workflow_call:
+    inputs:
+      include_tests:
+        description: 'Indicates whether build job has to run tests or not'
+        default: false
+        required: false
+        type: string
 
 jobs:
   build:
@@ -27,14 +28,14 @@ jobs:
         run: npm ci
 
       - name: Bundle project
-        uses: gulp bundle --ship
+        run: gulp bundle --ship
 
       - name: npm test
         if: ${{ inputs.include_tests == true }}
         run: npm test
 
       - name: Package solution
-        uses: gulp package-solution --ship
+        run: gulp package-solution --ship
 
       # - name: CLI for Microsoft 365 Deploy App
       #   uses: pnp/action-cli-deploy@v2.0.1
