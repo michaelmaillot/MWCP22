@@ -2,13 +2,13 @@ name: main
 on:
   push:
     branches: 
-      - master
+      - main
   workflow_dispatch:
     
 
 jobs:
   build-deploy-spfx:
-    uses: michaelmaillot/mwcp22/.github/workflows/build-deploy-spfx-cli-m365.yml@v1
+    uses: michaelmaillot/mwcp22/.github/workflows/build-deploy-spfx-cli-m365.yml@main
     with:
       include_tests: false
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite

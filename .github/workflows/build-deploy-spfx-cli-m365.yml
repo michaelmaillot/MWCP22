@@ -25,15 +25,15 @@ on:
 
 jobs:
   build-spfx:
-    uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@v1
+    uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
   deploy-spfx-uat:
     if: ${{ inputs.deploy_uat == true }}
-    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@v1
+    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       site_url_prd: ${{ inputs.site_url_prd }}
   deploy-spfx-prd:
     if: ${{ inputs.deploy_prd == true }}
-    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@v1
+    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       site_url_prd: ${{ inputs.site_url_prd }}
       
