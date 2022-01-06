@@ -25,6 +25,17 @@ on:
         description: 'SharePoint copy site owner to be'
         required: true
         type: string
+      site_to_remove:
+        description: 'SharePoint copy site url to remove'
+        default: ""
+        required: false
+        type: string
+    outputs:
+      site_to_remove:
+        description: 'SharePoint copy site url to remove'
+        default: ""
+        required: false
+        type: string
         
 
 jobs:
