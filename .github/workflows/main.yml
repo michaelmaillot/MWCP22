@@ -6,21 +6,34 @@ on:
   workflow_dispatch:
 
 jobs:
-  build_spfx:
-    uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
-  deploy_spfx_uat:
-    needs: build_spfx
+  deploy_spfx:
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       environment_name: UAT
-      spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+      spfx_package_name: "ee"
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       site_list_prd: Lists/EmployeeOnboarding
-  deploy_spfx_prd:
-    needs: deploy_spfx_uat
-    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
-    with:
-      environment_name: PRD
-      spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
-      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
-      site_to_remove: ${{ needs.jobs.deploy_spfx_uat.outputs.site_to_remove }}
+    # secrets:
+    #   AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
+    #   AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}
+    #   AAD_APP_ENCODED_CERTIFICATE: ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}
+    #   AAD_APP_THUMBPRINT: ${{ secrets.AAD_APP_THUMBPRINT }}
+    #   AAD_TENANT_ID: ${{ secrets.AAD_TENANT_ID }}
+  # build_spfx:
+  #   uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
+  # deploy_spfx_uat:
+  #   needs: build_spfx
+  #   uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
+  #   with:
+  #     environment_name: UAT
+  #     spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+  #     site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
+  #     site_list_prd: Lists/EmployeeOnboarding
+  # deploy_spfx_prd:
+  #   needs: deploy_spfx_uat
+  #   uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
+  #   with:
+  #     environment_name: PRD
+  #     spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+  #     site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
+  #     site_to_remove: ${{ needs.jobs.deploy_spfx_uat.outputs.site_to_remove }}

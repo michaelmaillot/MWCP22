@@ -39,19 +39,33 @@ on:
       site_to_remove:
         description: 'SharePoint copy site url to remove'
         value: ${{ jobs.deploy.outputs.site_copy_url }}
+    secrets:
+      AAD_APP_ID:
+        required: false
+      AAD_APP_PASSWORD:
+        required: false
+      AAD_APP_ENCODED_CERTIFICATE:
+        required: false
+      AAD_APP_THUMBPRINT:
+        required: false
+      AAD_TENANT_ID:
+        required: false
         
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment_name }}
+    environment: UAT
     outputs:
       site_copy_url: ${{ steps.step_site_copy.url }}
     steps:
-      - name: Download artifact from build job
-        uses: actions/download-artifact@v2
-        with:
-          name: ${{ inputs.spfx_package_name }}
+      # - name: test
+      #   shell: pwsh
+      #   run: Write-Host ${{ secrets.AAD_APP_THUMBPRINT }}
+      # - name: Download artifact from build job
+      #   uses: actions/download-artifact@v2
+      #   with:
+      #     name: ${{ inputs.spfx_package_name }}
 
       - name: Use Node 14.x
         uses: actions/setup-node@v2
@@ -73,35 +87,37 @@ jobs:
             m365 login --authType certificate --certificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} --thumbprint ${{ secrets.AAD_APP_THUMBPRINT }} -p ${{ secrets.AAD_APP_PASSWORD }} --appId ${{ secrets.AAD_APP_ID }} --tenant ${{ secrets.AAD_TENANT_ID }}
             $uri = [System.Uri]"${{ inputs.site_url_prd }}"
             m365 spo set --url $($uri.Scheme + "://" + $uri.Authority)
+            m365 status
+            m365 spo get
 
-      - name: Configuring CLI for Microsoft 365 output error handling
-        shell: pwsh
-        run: |
-            m365 cli config set --key output --value json
-            m365 cli config set --key errorOutput --value stdout
+      # - name: Configuring CLI for Microsoft 365 output error handling
+      #   shell: pwsh
+      #   run: |
+      #       m365 cli config set --key output --value json
+      #       m365 cli config set --key errorOutput --value stdout
       
-      - name: Installing PnP.PowerShell Module
-        if: ${{ inputs.environment_name != 'PRD' }}
-        shell: pwsh
-        run: Install-Module -Name "PnP.PowerShell" -Force
+      # - name: Installing PnP.PowerShell Module
+      #   if: ${{ inputs.environment_name != 'PRD' }}
+      #   shell: pwsh
+      #   run: Install-Module -Name "PnP.PowerShell" -Force
 
-      - name: Connecting to Production site and get site template
-        if: ${{ inputs.environment_name != 'PRD' }}
-        shell: pwsh
-        run: |
-            $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-            Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
-            Get-PnPSiteTemplate -Out $GITHUB_WORKSPACE/template.pnp
-            Add-PnPDataRowsToSiteTemplate -Path $GITHUB_WORKSPACE/template.pnp -List "$(site_list_prd)"
+      # - name: Connecting to Production site and get site template
+      #   if: ${{ inputs.environment_name != 'PRD' }}
+      #   shell: pwsh
+      #   run: |
+      #       $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
+      #       Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+      #       Get-PnPSiteTemplate -Out $GITHUB_WORKSPACE/template.pnp
+      #       Add-PnPDataRowsToSiteTemplate -Path $GITHUB_WORKSPACE/template.pnp -List "$(site_list_prd)"
 
-      - name: Create site copy
-        id: step_site_copy
-        if: ${{ inputs.environment_name != 'PRD' }}
-        run: echo "::set-output name=url::hello"
+      # - name: Create site copy
+      #   id: step_site_copy
+      #   if: ${{ inputs.environment_name != 'PRD' }}
+      #   run: echo "::set-output name=url::hello"
 
-      - name: Remove site copy
-        if: ${{ inputs.environment_name == 'PRD' }}
-        run: echo "${{ inputs.site_to_remove }}"
+      # - name: Remove site copy
+      #   if: ${{ inputs.environment_name == 'PRD' }}
+      #   run: echo "${{ inputs.site_to_remove }}"
       # - name: CreateSiteCopy
       #   if: ${{ inputs.environment_name != 'PRD' }}
       #   shell: pwsh
