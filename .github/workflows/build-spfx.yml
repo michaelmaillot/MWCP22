@@ -8,11 +8,16 @@ on:
         default: false
         required: false
         type: string
+    outputs:
+      package_name:
+        description: 'SPFx package name'
+        value: ${{ jobs.build.outputs.sppkg }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    outputs:
+      sppkg: ${{ steps.step_package.package_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -35,6 +40,19 @@ jobs:
 
       - name: Package solution
         run: gulp package-solution --ship
+
+      - name: GetSharePointPackage
+        id: step_package
+        shell: pwsh
+        run: |
+            $package = Get-ChildItem -Path sharepoint/solution -Recurse -Filter '*.sppkg' | Select Name | Select-Object -First 1
+            echo "SPPKG_FILE=$($package.Name)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
+            echo "::set-output name=package_name::$package.Name"
+
+      - name: Upload artifact for deployment job
+        uses: actions/upload-artifact@v2
+        with:
+          path: sharepoint/solution/*.sppkg
 
       # - name: CLI for Microsoft 365 Deploy App
       #   uses: pnp/action-cli-deploy@v2.0.1

@@ -7,6 +7,10 @@ on:
         description: 'Target environment to deploy to'
         required: true
         type: string
+      spfx_package_name:
+        description: 'SPFx package solution name'
+        required: true
+        type: string
       site_url_prd:
         description: 'SharePoint PRD site URL'
         required: true
@@ -44,15 +48,10 @@ jobs:
     outputs:
       site_copy_url: ${{ steps.step_site_copy.url }}
     steps:
-      - name: GetSharePointPackage
-        shell: pwsh
-        run: |
-            $package = Get-ChildItem -Path sharepoint/solution -Recurse -Filter '*.sppkg' | Select Name | Select-Object -First 1
-            echo "SPPKG_FILE=$($package.Name)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
       - name: Download artifact from build job
         uses: actions/download-artifact@v2
         with:
-          name: "${{ env.SPPKG_FILE }}"
+          name: ${{ inputs.spfx_package_name }}
 
       - name: Use Node 14.x
         uses: actions/setup-node@v2
@@ -65,7 +64,7 @@ jobs:
       - name: Login to Microsoft 365 with the CLI and set tenant context
         shell: pwsh
         run: |
-            m365 login --authType certificate --certificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} --thumbprint ${{ secrets.AAD_APP_THUMBPRINT }} --password ${{ secrets.AAD_APP_PASSWORD }} --appId ${{ secrets.AAD_APP_ID }} --tenant ${{ secrets.AAD_TENANT_ID }}
+            m365 login --authType certificate --certificateBase64Encoded "${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}" --thumbprint "${{ secrets.AAD_APP_THUMBPRINT }}" -p "${{ secrets.AAD_APP_PASSWORD }}" --appId ${{ secrets.AAD_APP_ID }} --tenant ${{ secrets.AAD_TENANT_ID }}
             $uri = [System.Uri]"${{ inputs.site_url_prd }}"
             m365 spo set --url $($uri.Scheme + "://" + $uri.Authority)
 
@@ -85,7 +84,7 @@ jobs:
         shell: pwsh
         run: |
             $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-            Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword ${{ secrets.AAD_APP_PASSWORD }} -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+            Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
             Get-PnPSiteTemplate -Out $GITHUB_WORKSPACE/template.pnp
             Add-PnPDataRowsToSiteTemplate -Path $GITHUB_WORKSPACE/template.pnp -List "$(site_list_prd)"
 

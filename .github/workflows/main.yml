@@ -7,17 +7,37 @@ on:
 
 jobs:
   build_spfx:
-    uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
+    # uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
+    runs-on: ubuntu-latest
+    environment: UAT
+    steps:
+      - name: Install PnP.PowerShell
+        shell: pwsh
+        run: Install-Module -Name "PnP.PowerShell" -Force
+
+      - name: Login to Microsoft 365 with the CLI and set tenant context
+        shell: pwsh
+        run: |
+            $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
+            Connect-PnPOnline -Url https://onepointdev365.sharepoint.com/sites/CommSite -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+            Get-PnPContext
+
+      - name: Get Context
+        shell: pwsh
+        run: |
+            Get-PnPContext
   deploy_spfx_uat:
     needs: build_spfx
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
-      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       environment_name: UAT
+      spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
   deploy_spfx_prd:
     needs: deploy_spfx_uat
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
-      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       environment_name: PRD
+      spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       site_to_remove: ${{ needs.jobs.deploy_spfx_uat.outputs.site_to_remove }}
