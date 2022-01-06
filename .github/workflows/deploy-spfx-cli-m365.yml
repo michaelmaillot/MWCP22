@@ -61,10 +61,16 @@ jobs:
       - name: Install CLI for Microsoft 365
         run: npm install -g @pnp/cli-microsoft365
 
+      - name: Configuring CLI for Microsoft 365 output error handling
+        shell: pwsh
+        run: |
+            m365 cli config set --key output --value json
+            m365 cli config set --key errorOutput --value stdout
+
       - name: Login to Microsoft 365 with the CLI and set tenant context
         shell: pwsh
         run: |
-            m365 login --authType certificate --certificateBase64Encoded "${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}" --thumbprint "${{ secrets.AAD_APP_THUMBPRINT }}" -p "${{ secrets.AAD_APP_PASSWORD }}" --appId ${{ secrets.AAD_APP_ID }} --tenant ${{ secrets.AAD_TENANT_ID }}
+            m365 login --authType certificate --certificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} --thumbprint ${{ secrets.AAD_APP_THUMBPRINT }} -p ${{ secrets.AAD_APP_PASSWORD }} --appId ${{ secrets.AAD_APP_ID }} --tenant ${{ secrets.AAD_TENANT_ID }}
             $uri = [System.Uri]"${{ inputs.site_url_prd }}"
             m365 spo set --url $($uri.Scheme + "://" + $uri.Authority)
 
