@@ -8,21 +8,17 @@ on:
 jobs:
   build_spfx:
     uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
-  test:
-    needs: build_spfx
-    runs-on: ubuntu-latest
-    steps:
-      - name: GetSharePointPackage
-        shell: pwsh
-        run: Write-Host "${{ env.SPPKG_FILE }}"
   deploy_spfx_uat:
     needs: build_spfx
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       environment_name: UAT
-      spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+      spfx_package_name: "${{ needs.build_spfx.outputs.package_name }}"
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       site_list_prd: Lists/EmployeeOnboarding
+      site_name_prd: CommSite
+      site_copy_owner: michael.maillot@onepointdev365.onmicrosoft.com
+      webpart_id: 7e6e172e-ac7e-4ab4-afe4-ca786fe5615b
     secrets:
       AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
       AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}
@@ -34,9 +30,11 @@ jobs:
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       environment_name: PRD
-      spfx_package_name: ${{ needs.jobs.build_spfx.outputs.package_name }}
+      spfx_package_name: "${{ needs.build_spfx.outputs.package_name }}"
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
-      site_to_remove: "${{ needs.deploy_spfx_uat.outputs.site_bla }}"
+      site_to_remove: "${{ needs.deploy_spfx_uat.outputs.site_to_remove }}"
+      app_catalog_site_url: https://onepointdev365.sharepoint.com/sites/app
+      app_catalog_scope: tenant
     secrets:
       AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
       AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}

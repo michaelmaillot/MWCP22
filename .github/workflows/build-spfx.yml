@@ -17,7 +17,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      sppkg: ${{ steps.step_package.package_name }}
+      sppkg: ${{ steps.step_package.outputs.package_name }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -46,20 +46,10 @@ jobs:
         shell: pwsh
         run: |
             $package = Get-ChildItem -Path sharepoint/solution -Recurse -Filter '*.sppkg' | Select Name | Select-Object -First 1
-            echo "SPPKG_FILE=$($package.Name)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
-            echo "::set-output name=package_name::$package.Name"
-
-      - name: GetSharePointPackage
-        shell: pwsh
-        run: Write-Host "${{ env.SPPKG_FILE }}"
+            echo "::set-output name=package_name::$($package.Name)"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
           path: sharepoint/solution/*.sppkg
-
-      # - name: CLI for Microsoft 365 Deploy App
-      #   uses: pnp/action-cli-deploy@v2.0.1
-      #   with:
-      #     APP_FILE_PATH: $GITHUB_WORKSPACE/sharepoint
       
