@@ -49,6 +49,10 @@ jobs:
             echo "SPPKG_FILE=$($package.Name)" | Out-File -FilePath $Env:GITHUB_ENV -Encoding utf-8 -Append
             echo "::set-output name=package_name::$package.Name"
 
+      - name: GetSharePointPackage
+        shell: pwsh
+        run: Write-Host "${{ env.SPPKG_FILE }}"
+
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v2
         with:
