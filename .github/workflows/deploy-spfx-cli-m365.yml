@@ -54,6 +54,9 @@ on:
       site_to_remove:
         description: 'SharePoint copy site url to remove'
         value: ${{ jobs.deploy.outputs.site_copy_url }}
+      sharepoint_package:
+        description: 'SharePoint Framework package name'
+        value: ${{ jobs.deploy.outputs.sppkg_name }}
     secrets:
       AAD_APP_ID:
         required: true
@@ -68,10 +71,11 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     environment: ${{ inputs.environment_name }}
     outputs:
       site_copy_url: ${{ steps.step_site_copy.outputs.url }}
+      sppkg_name: ${{ inputs.spfx_package_name }}
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v2

@@ -30,7 +30,7 @@ jobs:
     uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
     with:
       environment_name: PRD
-      spfx_package_name: "${{ needs.build_spfx.outputs.package_name }}"
+      spfx_package_name: "${{ needs.deploy_spfx_uat.outputs.sharepoint_package }}"
       site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
       site_to_remove: "${{ needs.deploy_spfx_uat.outputs.site_to_remove }}"
       app_catalog_site_url: https://onepointdev365.sharepoint.com/sites/app
