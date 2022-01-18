@@ -71,7 +71,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: windows-latest
+    runs-on: windows-2022
     environment: ${{ inputs.environment_name }}
     outputs:
       site_copy_url: ${{ steps.step_site_copy.outputs.url }}

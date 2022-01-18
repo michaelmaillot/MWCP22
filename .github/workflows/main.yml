@@ -6,76 +6,76 @@ on:
   workflow_dispatch:
 
 jobs:
-  test:
-    runs-on: windows-2022
-    environment: UAT
-    steps:
-      - name: Installing PnP.PowerShell Module
-        shell: pwsh
-        run: Install-Module -Name "PnP.PowerShell" -Force
+  # test:
+  #   runs-on: windows-2022
+  #   environment: UAT
+  #   steps:
+  #     - name: Installing PnP.PowerShell Module
+  #       shell: pwsh
+  #       run: Install-Module -Name "PnP.PowerShell" -Force
 
-      - name: Connecting to Production site and get site template
-        shell: pwsh
-        run: |
-            $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-            Connect-PnPOnline -Url https://onepointdev365.sharepoint.com/sites/CommSite -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
-            Get-PnPSiteTemplate -Out template.pnp
-            Add-PnPDataRowsToSiteTemplate -Path template.pnp -List "Lists/EmployeeOnboarding"
+  #     - name: Connecting to Production site and get site template
+  #       shell: pwsh
+  #       run: |
+  #           $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
+  #           Connect-PnPOnline -Url https://onepointdev365.sharepoint.com/sites/CommSite -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+  #           Get-PnPSiteTemplate -Out template.pnp
+  #           Add-PnPDataRowsToSiteTemplate -Path template.pnp -List "Lists/EmployeeOnboarding"
       
-      - name: Create UAT site
-        id: step_site_copy
-        shell: pwsh
-        run: |
-            $siteName = "CommSite-UAT" + [guid]::NewGuid().Guid
-            $uri = [System.Uri]"https://onepointdev365.sharepoint.com/sites/CommSite"
-            $siteUrl = $uri.Scheme + "://" + $uri.Authority + "/sites/" + $siteName
+  #     - name: Create UAT site
+  #       id: step_site_copy
+  #       shell: pwsh
+  #       run: |
+  #           $siteName = "CommSite-UAT" + [guid]::NewGuid().Guid
+  #           $uri = [System.Uri]"https://onepointdev365.sharepoint.com/sites/CommSite"
+  #           $siteUrl = $uri.Scheme + "://" + $uri.Authority + "/sites/" + $siteName
 
-            $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-            Connect-PnPOnline -Url https://onepointdev365.sharepoint.com/sites/CommSite -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
-            $site = New-PnPSite -Type CommunicationSite -Title $siteName -Url $siteUrl -Owner "michael.maillot@onepointdev365.onmicrosoft.com" -Wait
-            Write-Host "::set-output name=url::$site"
-            Write-Host $site
+  #           $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
+  #           Connect-PnPOnline -Url https://onepointdev365.sharepoint.com/sites/CommSite -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+  #           $site = New-PnPSite -Type CommunicationSite -Title $siteName -Url $siteUrl -Owner "michael.maillot@onepointdev365.onmicrosoft.com" -Wait
+  #           Write-Host "::set-output name=url::$site"
+  #           Write-Host $site
 
-      - name: Apply template
-        shell: pwsh
-        run: |
-            # $ProgressPreference = 'SilentlyContinue'
-            $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-            Connect-PnPOnline -Url ${{ steps.step_site_copy.outputs.url }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
-            Invoke-PnPSiteTemplate -Path template.pnp -ClearNavigation
+  #     - name: Apply template
+  #       shell: pwsh
+  #       run: |
+  #           # $ProgressPreference = 'SilentlyContinue'
+  #           $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
+  #           Connect-PnPOnline -Url ${{ steps.step_site_copy.outputs.url }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+  #           Invoke-PnPSiteTemplate -Path template.pnp -ClearNavigation
       
-  # build_spfx:
-  #   uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
-  # deploy_spfx_uat:
-  #   needs: build_spfx
-  #   uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
-  #   with:
-  #     environment_name: UAT
-  #     spfx_package_name: "${{ needs.build_spfx.outputs.package_name }}"
-  #     site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
-  #     site_list_prd: Lists/EmployeeOnboarding
-  #     site_name_prd: CommSite
-  #     site_copy_owner: michael.maillot@onepointdev365.onmicrosoft.com
-  #     webpart_id: 7e6e172e-ac7e-4ab4-afe4-ca786fe5615b
-  #   secrets:
-  #     AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
-  #     AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}
-  #     AAD_APP_ENCODED_CERTIFICATE: ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}
-  #     AAD_APP_THUMBPRINT: ${{ secrets.AAD_APP_THUMBPRINT }}
-  #     AAD_TENANT_ID: ${{ secrets.AAD_TENANT_ID }}
-  # deploy_spfx_prd:
-  #   needs: deploy_spfx_uat
-  #   uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
-  #   with:
-  #     environment_name: PRD
-  #     spfx_package_name: "${{ needs.deploy_spfx_uat.outputs.sharepoint_package }}"
-  #     site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
-  #     site_to_remove: "${{ needs.deploy_spfx_uat.outputs.site_to_remove }}"
-  #     app_catalog_site_url: https://onepointdev365.sharepoint.com/sites/app
-  #     app_catalog_scope: tenant
-  #   secrets:
-  #     AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
-  #     AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}
-  #     AAD_APP_ENCODED_CERTIFICATE: ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}
-  #     AAD_APP_THUMBPRINT: ${{ secrets.AAD_APP_THUMBPRINT }}
-  #     AAD_TENANT_ID: ${{ secrets.AAD_TENANT_ID }}
+  build_spfx:
+    uses: michaelmaillot/mwcp22/.github/workflows/build-spfx.yml@main
+  deploy_spfx_uat:
+    needs: build_spfx
+    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
+    with:
+      environment_name: UAT
+      spfx_package_name: "${{ needs.build_spfx.outputs.package_name }}"
+      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
+      site_list_prd: Lists/EmployeeOnboarding
+      site_name_prd: CommSite
+      site_copy_owner: michael.maillot@onepointdev365.onmicrosoft.com
+      webpart_id: 7e6e172e-ac7e-4ab4-afe4-ca786fe5615b
+    secrets:
+      AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
+      AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}
+      AAD_APP_ENCODED_CERTIFICATE: ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}
+      AAD_APP_THUMBPRINT: ${{ secrets.AAD_APP_THUMBPRINT }}
+      AAD_TENANT_ID: ${{ secrets.AAD_TENANT_ID }}
+  deploy_spfx_prd:
+    needs: deploy_spfx_uat
+    uses: michaelmaillot/mwcp22/.github/workflows/deploy-spfx-cli-m365.yml@main
+    with:
+      environment_name: PRD
+      spfx_package_name: "${{ needs.deploy_spfx_uat.outputs.sharepoint_package }}"
+      site_url_prd: https://onepointdev365.sharepoint.com/sites/CommSite
+      site_to_remove: "${{ needs.deploy_spfx_uat.outputs.site_to_remove }}"
+      app_catalog_site_url: https://onepointdev365.sharepoint.com/sites/app
+      app_catalog_scope: tenant
+    secrets:
+      AAD_APP_ID: ${{ secrets.AAD_APP_ID }}
+      AAD_APP_PASSWORD: ${{ secrets.AAD_APP_PASSWORD }}
+      AAD_APP_ENCODED_CERTIFICATE: ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }}
+      AAD_APP_THUMBPRINT: ${{ secrets.AAD_APP_THUMBPRINT }}
+      AAD_TENANT_ID: ${{ secrets.AAD_TENANT_ID }}
