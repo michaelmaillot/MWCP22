@@ -99,7 +99,7 @@ jobs:
         shell: pwsh
         run: |
             $siteName = "CommSite-UAT" + [guid]::NewGuid().Guid
-            $uri = [System.Uri]${{ inputs.site_url_prd }}
+            $uri = [System.Uri]"${{ inputs.site_url_prd }}"
             $siteUrl = $uri.Scheme + "://" + $uri.Authority + "/sites/" + $siteName
 
             $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
@@ -191,12 +191,12 @@ jobs:
         if: ${{ inputs.environment_name == 'PRD' }}
         run: |
           $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-          Connect-PnPOnline -Url ${{ steps.step_site_copy.outputs.url }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+          Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
           Add-PnPApp -Path "artifact/${{ inputs.spfx_package_name }}" -Scope ${{ inputs.app_catalog_scope }} -Publish -Overwrite
 
       - name: Remove site copy (PRD)
         if: ${{ inputs.environment_name == 'PRD' }}
         run: |
           $securePassword = ConvertTo-SecureString "${{ secrets.AAD_APP_PASSWORD }}" -AsPlainText -Force
-          Connect-PnPOnline -Url ${{ steps.step_site_copy.outputs.url }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
+          Connect-PnPOnline -Url ${{ inputs.site_url_prd }} -CertificateBase64Encoded ${{ secrets.AAD_APP_ENCODED_CERTIFICATE }} -CertificatePassword $securePassword -ClientId ${{ secrets.AAD_APP_ID }} -Tenant ${{ secrets.AAD_TENANT_ID }}
           Remove-PnPTenantSite -Url ${{ inputs.site_to_remove }} -SkipRecyclebin -Force
